@@ -1,68 +1,80 @@
 using UnityEngine;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5.0f;
-    public float gravity = -9.8f;
-    public float mouseSensitivity = 100f;
-    public float jumpHeight = 9.0f;
-    private float xRotation = 0f;
-    private float yRotation = 0f;
+    public float moveSpeed = 5f;
+    public float sprintSpeed = 8f;
+    public float jumpForce = 5f;
 
     private CharacterController _controller;
     private Vector3 _velocity;
-    public Transform playerBody;
+    private float _currentSpeed;
+    private Animator _playerAnimator;
+    private bool _isCurrentlyWalking;
 
-    void Start()
+    private void Start()
     {
         _controller = GetComponent<CharacterController>();
+        _playerAnimator = GetComponent<Animator>();
         Cursor.lockState = CursorLockMode.Locked;
+        _currentSpeed = moveSpeed;
     }
 
-
-    private void _mouseMovement()
+    private void Update()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-        playerBody.Rotate(Vector3.up * mouseX);
-        playerBody.Rotate(Vector3.right * mouseY);
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -45f, 45f);
-        yRotation += mouseX;
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
+        HandleGroundedState();
+        HandleSprinting();
+        HandleMovement();
+        HandleJumping();
+        HandleGravity();
     }
 
-
-    private void _keyboardMovement()
+    private void HandleGroundedState()
     {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        Vector3 move = playerBody.right * moveX + playerBody.forward * moveZ;
-        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? speed * 2 : speed;
-        _controller.Move(move * (currentSpeed * Time.deltaTime));
-        if (_controller.isGrounded)
+        if (_controller.isGrounded && _velocity.y < 0)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            }
-            else
-            {
-                _velocity.y = -2f;
-            }
+            _velocity.y = -2f;
+        }
+    }
+
+    private void HandleSprinting()
+    {
+        _currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
+    }
+
+    private void HandleMovement()
+    {
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+
+        // Check if any movement input is being pressed
+        bool isMoving = Mathf.Abs(x) > 0.1f || Mathf.Abs(z) > 0.1f;
+
+        // Only update animator if state changes
+        if (isMoving != _isCurrentlyWalking)
+        {
+            _isCurrentlyWalking = isMoving;
+            _playerAnimator.SetBool("isWalking", _isCurrentlyWalking);
         }
 
-        _velocity.y += gravity * Time.deltaTime;
-        _controller.Move(_velocity * Time.deltaTime);
+        Vector3 move = transform.right * x + transform.forward * z;
+        _controller.Move(move * (_currentSpeed * Time.deltaTime));
     }
 
-    void Update()
+    private void HandleJumping()
     {
-        _mouseMovement();
-        _keyboardMovement();
+        if (Input.GetButtonDown("Jump") && _controller.isGrounded)
+        {
+            _velocity.y = jumpForce;
+        }
+    }
+
+    private void HandleGravity()
+    {
+        if (!_controller.isGrounded)
+        {
+            _velocity.y += Physics.gravity.y * Time.deltaTime;
+        }
+        _controller.Move(_velocity * Time.deltaTime);
     }
 }

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e16e1334f29f459f92decc54e65a2c86
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - weaponPrefab: {fileID: 919132149155446097, guid: 5c6eb55521d5146baa5c6dfa715ff12e, type: 3}
+  - shootSound: {instanceID: 0}
+  - reloadSound: {instanceID: 0}
+  - muzzleFlash: {instanceID: 0}
+  - impactEffect: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
