@@ -6,18 +6,25 @@ public class PlayerController : MonoBehaviour
     public float sprintSpeed = 8f;
     public float jumpForce = 5f;
 
-    private CharacterController _controller;
-    private Vector3 _velocity;
-    private float _currentSpeed;
-    private Animator _playerAnimator;
-    private bool _isCurrentlyWalking;
+    public CharacterController controller;
+    private Vector3 velocity;
+    private float currentSpeed;
+    public Animator playerAnimator;
+    private bool isCurrentlyWalking;
+    private float horizontalInput;
+    private float verticalInput;
 
     private void Start()
     {
-        _controller = GetComponent<CharacterController>();
-        _playerAnimator = GetComponent<Animator>();
+        if (controller == null)
+            controller = GetComponent<CharacterController>();
+            
+        if (playerAnimator == null)
+            playerAnimator = GetComponent<Animator>();
+            
         Cursor.lockState = CursorLockMode.Locked;
-        _currentSpeed = moveSpeed;
+        currentSpeed = moveSpeed;
+        velocity = Vector3.zero;
     }
 
     private void Update()
@@ -31,50 +38,64 @@ public class PlayerController : MonoBehaviour
 
     private void HandleGroundedState()
     {
-        if (_controller.isGrounded && _velocity.y < 0)
+        if (controller.isGrounded && velocity.y < 0)
         {
-            _velocity.y = -2f;
+            velocity.y = -2f;
         }
     }
 
     private void HandleSprinting()
     {
-        _currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
+        currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
     }
 
     private void HandleMovement()
     {
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        horizontalInput = Input.GetAxis("Horizontal");
+        verticalInput = Input.GetAxis("Vertical");
 
-        // Check if any movement input is being pressed
-        bool isMoving = Mathf.Abs(x) > 0.1f || Mathf.Abs(z) > 0.1f;
+        bool isMoving = Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f;
 
-        // Only update animator if state changes
-        if (isMoving != _isCurrentlyWalking)
+        if (isMoving != isCurrentlyWalking)
         {
-            _isCurrentlyWalking = isMoving;
-            _playerAnimator.SetBool("isWalking", _isCurrentlyWalking);
+            isCurrentlyWalking = isMoving;
+            if (playerAnimator != null)
+                playerAnimator.SetBool("isWalking", isCurrentlyWalking);
         }
 
-        Vector3 move = transform.right * x + transform.forward * z;
-        _controller.Move(move * (_currentSpeed * Time.deltaTime));
+        Vector3 move = transform.right * horizontalInput + transform.forward * verticalInput;
+        controller.Move(move * (currentSpeed * Time.deltaTime));
     }
 
     private void HandleJumping()
     {
-        if (Input.GetButtonDown("Jump") && _controller.isGrounded)
+        if (Input.GetButtonDown("Jump") && controller.isGrounded)
         {
-            _velocity.y = jumpForce;
+            velocity.y = jumpForce;
         }
     }
 
     private void HandleGravity()
     {
-        if (!_controller.isGrounded)
+        if (!controller.isGrounded)
         {
-            _velocity.y += Physics.gravity.y * Time.deltaTime;
+            velocity.y += Physics.gravity.y * Time.deltaTime;
         }
-        _controller.Move(_velocity * Time.deltaTime);
+        controller.Move(velocity * Time.deltaTime);
+    }
+    
+    public bool IsMoving()
+    {
+        return isCurrentlyWalking;
+    }
+    
+    public float GetMovementMagnitude()
+    {
+        return new Vector2(horizontalInput, verticalInput).magnitude;
+    }
+    
+    public bool IsSprinting()
+    {
+        return currentSpeed > moveSpeed;
     }
 }

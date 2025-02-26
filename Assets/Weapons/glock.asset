@@ -15,13 +15,15 @@ MonoBehaviour:
   weaponName: Deagle
   weaponPrefab: {fileID: 4217084101178954603, guid: c8215fcacba154c058d001605722674c, type: 3}
   damage: 10
-  fireRate: 0.5
+  fireRate: 10
   range: 100
   maxAmmo: 30
   currentAmmo: 0
   reloadTime: 2
-  isAutomatic: 0
+  isAutomatic: 1
   shootSound: {fileID: 8300000, guid: f8829446d029845bbbe3444f501f7c52, type: 3}
-  reloadSound: {fileID: 0}
+  reloadSound: {fileID: 8300000, guid: 841261fb0053e45fc91809aa7dcbb373, type: 3}
   muzzleFlash: {fileID: 8078720523478869859, guid: 4f5fc4bbd01b03a4499a6ed77f175fc7, type: 3}
   muzzlePosition: {x: 0, y: -0.5, z: 0}
+  trailRendererPrefab: {fileID: -5168464505989673415, guid: 6f744b372d5a74683bf354af788962a4, type: 3}
+  trailDuration: 0.5
