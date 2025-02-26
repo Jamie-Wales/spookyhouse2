@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4b9fc5e8dfa942aaa1f22e7e91fd770b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - enemyPrefab: {fileID: 919132149155446097, guid: b5a97ca234a5849c9b421b56e013b086, type: 3}
+  - deathSound: {instanceID: 0}
+  - hitEffectPrefab: {instanceID: 0}
+  - deathEffectPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

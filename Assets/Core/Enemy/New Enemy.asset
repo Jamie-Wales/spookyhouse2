@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b9fc5e8dfa942aaa1f22e7e91fd770b, type: 3}
+  m_Name: New Enemy
+  m_EditorClassIdentifier: 
+  enemyName: Enemy
+  description: Enemy1
+  enemyPrefab: {fileID: 2705994520222875, guid: 92ee0a3d82c2d47a8950d41f46aba376, type: 3}
+  maxHealth: 100
+  currentHealth: 100
+  moveSpeed: 5
+  attackRange: 2
+  attackDamage: 10
+  attackCooldown: 1.5
+  detectionRadius: 10
+  chaseSpeed: 5
+  stunResistance: 0
+  canPatrol: 1
+  canUseRangedAttacks: 0
+  attackSounds: []
+  hurtSounds: []
+  deathSound: {fileID: 0}
+  hitEffectPrefab: {fileID: 0}
+  deathEffectPrefab: {fileID: 0}
+  idleAnimTrigger: Idle
+  walkAnimTrigger: Walk
+  runAnimTrigger: Run
+  attackAnimTrigger: Attack
+  hurtAnimTrigger: Hurt
+  deathAnimTrigger: Death
