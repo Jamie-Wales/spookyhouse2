@@ -18,8 +18,8 @@ public class CrosshairController : MonoBehaviour
     private RectTransform crosshairRect;
     private float currentSize;
     private float targetSize;
-    private PlayerController playerController;
-    private WeaponManager weaponManager;
+    public PlayerController playerController;
+    public WeaponManager weaponManager;
 
     private void Start()
     {
@@ -32,8 +32,6 @@ public class CrosshairController : MonoBehaviour
         crosshairRect = crosshairImage.rectTransform;
         currentSize = defaultSize;
         targetSize = defaultSize;
-        playerController = FindObjectOfType<PlayerController>();
-        weaponManager = FindObjectOfType<WeaponManager>();
     }
     
     private void Update()

@@ -244,7 +244,7 @@ public class WeaponManager : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.R) && !_isReloading &&
-            _currentWeaponData != null && _currentWeaponData.currentAmmo < _currentWeaponData.maxAmmo)
+            _currentWeaponData && _currentWeaponData.currentAmmo < _currentWeaponData.maxAmmo)
         {
             StartCoroutine(Reload());
         }
@@ -292,7 +292,7 @@ public class WeaponManager : MonoBehaviour
 
         while (elapsedTime < duration && distanceCovered < distance)
         {
-            if (trail == null || !trail.gameObject.activeInHierarchy)
+            if (!trail || !trail.gameObject.activeInHierarchy)
             {
                 yield break;
             }
@@ -375,14 +375,5 @@ public class WeaponManager : MonoBehaviour
     private void OnDestroy()
     {
         _trailPool?.Clear();
-
-        TrailRenderer[] trails = FindObjectsOfType<TrailRenderer>();
-        foreach (var trail in trails)
-        {
-            if (trail != null && trail.gameObject.name.Contains("Trail"))
-            {
-                Destroy(trail.gameObject);
-            }
-        }
     }
 }
