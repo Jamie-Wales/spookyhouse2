@@ -18,7 +18,12 @@ public class EnemyController : MonoBehaviour
     private bool _isDead;
     private EnemyState _currentState = EnemyState.Idle;
 
+    // Animation boolean parameters
+    private static readonly string IS_WALKING = "isWalking";
+    private static readonly string IS_RUNNING = "isRunning";
+
     [Header("Debug")] public bool showDebugLogs = true;
+    private Camera _mainCamera;
 
     private enum EnemyState
     {
@@ -46,6 +51,7 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+        _mainCamera = Camera.main;
         if (!playerTransform)
         {
             GameObject player = GameObject.FindWithTag("Player");
@@ -114,6 +120,15 @@ public class EnemyController : MonoBehaviour
                     _currentState = EnemyState.Attack;
                 }
             }
+        }
+    }
+
+    private void UpdateAnimationState(bool isWalking, bool isRunning)
+    {
+        if (_animator)
+        {
+            _animator.SetBool(IS_WALKING, isWalking);
+            _animator.SetBool(IS_RUNNING, isRunning);
         }
     }
 
@@ -194,11 +209,7 @@ public class EnemyController : MonoBehaviour
     {
         LogDebug("Entering IDLE state");
 
-        if (_animator && !string.IsNullOrEmpty(enemyData.idleAnimTrigger))
-        {
-            _animator.SetTrigger(enemyData.idleAnimTrigger);
-        }
-
+        UpdateAnimationState(false, false);
         _agent.isStopped = true;
         float idleTime = Random.Range(2f, 5f);
 
@@ -228,11 +239,7 @@ public class EnemyController : MonoBehaviour
     {
         LogDebug("Entering PATROL state");
 
-        if (_animator && !string.IsNullOrEmpty(enemyData.walkAnimTrigger))
-        {
-            _animator.SetTrigger(enemyData.walkAnimTrigger);
-        }
-
+        UpdateAnimationState(true, false);
         _agent.isStopped = false;
         _agent.speed = enemyData.moveSpeed;
 
@@ -263,11 +270,7 @@ public class EnemyController : MonoBehaviour
     {
         LogDebug("Entering CHASE state");
 
-        if (_animator && !string.IsNullOrEmpty(enemyData.runAnimTrigger))
-        {
-            _animator.SetTrigger(enemyData.runAnimTrigger);
-        }
-
+        UpdateAnimationState(true, true);
         _agent.isStopped = false;
         _agent.speed = enemyData.chaseSpeed;
 
@@ -280,11 +283,9 @@ public class EnemyController : MonoBehaviour
             yield break;
         }
 
-        // Check if we're on a NavMesh
         if (!NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 0.5f, NavMesh.AllAreas))
         {
             LogDebug("ERROR: Enemy not on NavMesh! Cannot navigate.");
-            // Try to find valid NavMesh position
             if (NavMesh.SamplePosition(transform.position, out hit, 5f, NavMesh.AllAreas))
             {
                 LogDebug($"Found valid NavMesh position at {hit.position}, moving there");
@@ -303,7 +304,6 @@ public class EnemyController : MonoBehaviour
         float stuckTimer = 0;
         Vector3 playerPos = GetPlayerPosition();
 
-        // Check if path to player exists
         NavMeshPath path = new NavMeshPath();
         if (!NavMesh.CalculatePath(transform.position, playerPos, NavMesh.AllAreas, path))
         {
@@ -318,10 +318,8 @@ public class EnemyController : MonoBehaviour
             float distanceToPlayer = GetDistanceToPlayer();
             playerPos = GetPlayerPosition();
 
-            // Attempt to set destination
             bool success = _agent.SetDestination(playerPos);
 
-            // Check if we're stuck
             if (frameCount % 30 == 0)
             {
                 float movedDistance = Vector3.Distance(lastPosition, transform.position);
@@ -334,7 +332,6 @@ public class EnemyController : MonoBehaviour
                     {
                         LogDebug($"Agent appears stuck (moved {movedDistance:F2} in last 30 frames)");
 
-                        // Check path status
                         if (!NavMesh.CalculatePath(transform.position, playerPos, NavMesh.AllAreas, path))
                         {
                             LogDebug("Path calculation failed");
@@ -342,7 +339,6 @@ public class EnemyController : MonoBehaviour
 
                         LogDebug($"Path status: {path.status}, path length: {path.corners.Length}");
 
-                        // Try to unstick by moving directly
                         NavMeshHit navHit;
                         if (NavMesh.SamplePosition(
                                 transform.position + (playerPos - transform.position).normalized * 2f,
@@ -381,6 +377,7 @@ public class EnemyController : MonoBehaviour
     {
         LogDebug("ATTACKING PLAYER");
 
+        UpdateAnimationState(false, false);
         _agent.isStopped = true;
 
         if (!playerTransform)
@@ -451,6 +448,7 @@ public class EnemyController : MonoBehaviour
     {
         LogDebug("Entering HURT state");
 
+        UpdateAnimationState(false, false);
         _agent.isStopped = true;
 
         if (_animator && !string.IsNullOrEmpty(enemyData.hurtAnimTrigger))
@@ -474,6 +472,7 @@ public class EnemyController : MonoBehaviour
 
         _isDead = true;
         _agent.isStopped = true;
+        UpdateAnimationState(false, false);
 
         if (_animator && !string.IsNullOrEmpty(enemyData.deathAnimTrigger))
         {
@@ -485,14 +484,10 @@ public class EnemyController : MonoBehaviour
             col.enabled = false;
         }
 
+        SpawnTemporaryEffect(enemyData.deathEffectPrefab, transform.position + Vector3.up, 0.5f);
         if (enemyData.deathSound && _audioSource)
         {
             _audioSource.PlayOneShot(enemyData.deathSound);
-        }
-
-        if (enemyData.deathEffectPrefab)
-        {
-            Instantiate(enemyData.deathEffectPrefab, transform.position + Vector3.up, Quaternion.identity);
         }
 
         yield return new WaitForSeconds(3.0f);
@@ -516,9 +511,14 @@ public class EnemyController : MonoBehaviour
         return center;
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Vector3? hitPoint = null)
     {
         if (_isDead) return;
+        if (enemyData.hitEffectPrefab)
+        {
+            Vector3 effectPosition = hitPoint ?? (transform.position + (Vector3.up * 1.5f));
+            SpawnTemporaryEffect(enemyData.hitEffectPrefab, effectPosition, 0.5f);
+        }
 
         _currentHealth -= damage;
         LogDebug($"Took {damage} damage! Health: {_currentHealth}/{enemyData.maxHealth}");
@@ -579,5 +579,21 @@ public class EnemyController : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, enemyData.attackRange);
+    }
+
+    private void SpawnTemporaryEffect(GameObject effectPrefab, Vector3 position, float duration = 0.5f)
+    {
+        if (effectPrefab)
+        {
+            GameObject effect = Instantiate(effectPrefab, position, Quaternion.Euler(_mainCamera.transform.forward));
+            ParticleSystem ps = effect.GetComponent<ParticleSystem>();
+            if (ps)
+            {
+                ps.Play();
+            }
+
+            LogDebug($"Spawned effect {effectPrefab.name} at {position}, duration: {duration}");
+            Destroy(effect, duration);
+        }
     }
 }

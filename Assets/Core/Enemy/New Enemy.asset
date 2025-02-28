@@ -16,7 +16,6 @@ MonoBehaviour:
   description: Enemy1
   enemyPrefab: {fileID: 223230706613982482, guid: 4ddeb9bbe930c4112bd1580844f5140b, type: 3}
   maxHealth: 100
-  currentHealth: 100
   moveSpeed: 5
   attackRange: 2
   attackDamage: 10
@@ -29,11 +28,8 @@ MonoBehaviour:
   attackSounds: []
   hurtSounds: []
   deathSound: {fileID: 0}
-  hitEffectPrefab: {fileID: 0}
-  deathEffectPrefab: {fileID: 0}
-  idleAnimTrigger: Idle
-  walkAnimTrigger: Walk
-  runAnimTrigger: Run
+  hitEffectPrefab: {fileID: 1000013355911406, guid: d32aa916f50cac94db11e6f19821a58f, type: 3}
+  deathEffectPrefab: {fileID: 1834194341294532, guid: d5f26854a8904624c8073139cd2eb346, type: 3}
   attackAnimTrigger: Attack
   hurtAnimTrigger: Hurt
   deathAnimTrigger: Death

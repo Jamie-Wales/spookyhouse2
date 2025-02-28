@@ -132,17 +132,15 @@ public class PlayerController : MonoBehaviour
                 canDive = true;
                 lastJumpTime = Time.time;
 
-                if (playerAnimator != null)
+                if (playerAnimator)
                     playerAnimator.SetTrigger("jump");
             }
-            // Dive when already in the air
             else if (canDive && Time.time - lastJumpTime < doubleJumpTimeWindow)
             {
                 StartDiveRoll();
             }
         }
 
-        // Handle reload trigger
         if (Input.GetKeyDown(KeyCode.R) && playerAnimator != null)
         {
             playerAnimator.SetTrigger("reload");
