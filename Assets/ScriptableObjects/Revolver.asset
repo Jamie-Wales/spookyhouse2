@@ -10,20 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e16e1334f29f459f92decc54e65a2c86, type: 3}
-  m_Name: glock
+  m_Name: Revolver
   m_EditorClassIdentifier: 
-  weaponName: Deagle
-  weaponPrefab: {fileID: 4217084101178954603, guid: c8215fcacba154c058d001605722674c, type: 3}
-  damage: 10
-  fireRate: 10
-  range: 100
-  maxAmmo: 30
-  currentAmmo: 0
-  reloadTime: 2
-  isAutomatic: 1
+  weaponName: Revolver
+  weaponPrefab: {fileID: 1471732949528042930, guid: 57efc8ca5312c4c8eb5357c631c4dd6f, type: 3}
+  weaponScale: {x: 1, y: 1, z: 1}
+  weaponPositionOffset: {x: -0.7, y: 0.45, z: -0.25}
+  weaponRotationOffset: {x: -90, y: 0, z: 0}
+  muzzlePosition: {x: 0.56038624, y: -0.08932122, z: 0.10178661}
+  muzzleFlash: {fileID: 8078720523478869859, guid: 4f5fc4bbd01b03a4499a6ed77f175fc7, type: 3}
   shootSound: {fileID: 8300000, guid: f8829446d029845bbbe3444f501f7c52, type: 3}
   reloadSound: {fileID: 8300000, guid: 841261fb0053e45fc91809aa7dcbb373, type: 3}
-  muzzleFlash: {fileID: 8078720523478869859, guid: 4f5fc4bbd01b03a4499a6ed77f175fc7, type: 3}
-  muzzlePosition: {x: 0, y: -0.5, z: 0}
+  maxAmmo: 6
+  currentAmmo: 0
+  fireRate: 10
+  reloadTime: 2
+  range: 50
+  damage: 50
+  isAutomatic: 0
+  crosshairSprite: {fileID: 21300000, guid: 9086d1bb7fe4f459291956d7e471544b, type: 3}
   trailRendererPrefab: {fileID: -5168464505989673415, guid: 6f744b372d5a74683bf354af788962a4, type: 3}
   trailDuration: 0.5

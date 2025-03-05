@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI; // Added for UI elements
 using System.Collections;
 
 public class PlayerController : MonoBehaviour
@@ -8,8 +9,16 @@ public class PlayerController : MonoBehaviour
     public float jumpForce = 5f;
     public float diveForce = 8f; // Forward force for dive
 
-    [Header("Double Jump Settings")] public float doubleJumpTimeWindow = 0.5f;
+    [Header("Double Jump Settings")] 
+    public float doubleJumpTimeWindow = 0.5f;
     public float diveRollDuration = 1.2f;
+
+    [Header("Stamina Settings")]
+    public float maxStamina = 100f;
+    public float staminaRechargeRate = 15f;
+    public float sprintStaminaCost = 15f; // Per second
+    public float dodgeRollStaminaCost = 25f; // One-time cost
+    public Slider staminaSlider; 
 
     public CharacterController controller;
     private Vector3 velocity;
@@ -23,6 +32,7 @@ public class PlayerController : MonoBehaviour
     private float lastJumpTime = -10f;
     private bool isDiving = false;
     private Vector3 diveDirection;
+    private float currentStamina;
 
     // Flag to track our own grounded state
     private bool isGrounded = false;
@@ -41,11 +51,22 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         currentSpeed = moveSpeed;
         velocity = Vector3.zero;
+        
+        // Initialize stamina
+        currentStamina = maxStamina;
+        
+        // Set up stamina slider
+        if (staminaSlider)
+        {
+            staminaSlider.maxValue = maxStamina;
+            staminaSlider.value = currentStamina;
+        }
     }
 
     private void Update()
     {
         HandleGroundedState();
+        UpdateStamina();
 
         // Only process normal movement controls if not diving
         if (!isDiving)
@@ -56,6 +77,27 @@ public class PlayerController : MonoBehaviour
         }
 
         HandleGravity();
+    }
+
+    private void UpdateStamina()
+    {
+        // Drain stamina when sprinting
+        if (Input.GetKey(KeyCode.LeftShift) && isCurrentlyWalking && currentStamina > 0 && isGrounded)
+        {
+            currentStamina -= sprintStaminaCost * Time.deltaTime;
+        }
+        // Recharge stamina when not sprinting
+        else if (currentStamina < maxStamina)
+        {
+            currentStamina += staminaRechargeRate * Time.deltaTime;
+            currentStamina = Mathf.Min(currentStamina, maxStamina);
+        }
+
+        // Update UI
+        if (staminaSlider)
+        {
+            staminaSlider.value = currentStamina;
+        }
     }
 
     private void HandleGroundedState()
@@ -73,7 +115,7 @@ public class PlayerController : MonoBehaviour
                 velocity.y = -2f;
 
                 // If we were diving and just hit the ground, end the dive
-                if (isDiving && playerAnimator.GetBool("isDiving"))
+                if (isDiving && playerAnimator && playerAnimator.GetBool("isDiving"))
                 {
                     StartCoroutine(EndDiveRoll());
                 }
@@ -98,7 +140,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleSprinting()
     {
-        currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
+        // Only allow sprinting if there's stamina
+        bool canSprint = Input.GetKey(KeyCode.LeftShift) && currentStamina > 0;
+        currentSpeed = canSprint ? sprintSpeed : moveSpeed;
     }
 
     private void HandleMovement()
@@ -135,9 +179,12 @@ public class PlayerController : MonoBehaviour
                 if (playerAnimator)
                     playerAnimator.SetTrigger("jump");
             }
-            else if (canDive && Time.time - lastJumpTime < doubleJumpTimeWindow)
+            else if (canDive && Time.time - lastJumpTime < doubleJumpTimeWindow && currentStamina >= dodgeRollStaminaCost)
             {
+                // Check if player has enough stamina for dodge roll
                 StartDiveRoll();
+                // Consume stamina for dodge roll
+                currentStamina -= dodgeRollStaminaCost;
             }
         }
 
@@ -220,5 +267,10 @@ public class PlayerController : MonoBehaviour
     public bool IsDiving()
     {
         return isDiving;
+    }
+    
+    public float GetStaminaPercentage()
+    {
+        return currentStamina / maxStamina;
     }
 }

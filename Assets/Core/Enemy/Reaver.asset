@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b9fc5e8dfa942aaa1f22e7e91fd770b, type: 3}
-  m_Name: New Enemy
+  m_Name: Reaver
   m_EditorClassIdentifier: 
   enemyName: Enemy
   description: Enemy1
   enemyPrefab: {fileID: 223230706613982482, guid: 4ddeb9bbe930c4112bd1580844f5140b, type: 3}
   maxHealth: 100
   moveSpeed: 5
-  attackRange: 2
+  attackRange: 3
   attackDamage: 10
   attackCooldown: 1.5
   detectionRadius: 10
@@ -25,9 +25,19 @@ MonoBehaviour:
   stunResistance: 0
   canPatrol: 1
   canUseRangedAttacks: 0
-  attackSounds: []
-  hurtSounds: []
-  deathSound: {fileID: 0}
+  attackSounds:
+  - {fileID: 8300000, guid: b21a9a8d229b84adba2df856991d267e, type: 3}
+  - {fileID: 8300000, guid: 6712d292ee82e48bfa397b6ac4e28f65, type: 3}
+  - {fileID: 8300000, guid: 57cbe3f76759b43d28fb05bb41620541, type: 3}
+  - {fileID: 8300000, guid: f08fb7758450749e7bdb07dd248d12b9, type: 3}
+  - {fileID: 8300000, guid: e6d12da22ebf94f3b8a59158b767804c, type: 3}
+  hurtSounds:
+  - {fileID: 8300000, guid: 6b51edf169bee44119263f4db8f765f6, type: 3}
+  - {fileID: 8300000, guid: ed81e648040004dc2ae73278686b460e, type: 3}
+  - {fileID: 8300000, guid: 210a8f6a202784e69babe018e3e1fec2, type: 3}
+  - {fileID: 8300000, guid: bd57035f582d94c03a2541453f3aee93, type: 3}
+  - {fileID: 8300000, guid: d554c558aa1ef42ce9a42075ae1bc912, type: 3}
+  deathSound: {fileID: 8300000, guid: 866de804dfa5148e68387b55f497f13f, type: 3}
   hitEffectPrefab: {fileID: 1000013355911406, guid: d32aa916f50cac94db11e6f19821a58f, type: 3}
   deathEffectPrefab: {fileID: 1834194341294532, guid: d5f26854a8904624c8073139cd2eb346, type: 3}
   attackAnimTrigger: Attack

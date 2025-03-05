@@ -6,6 +6,8 @@ public class EnemyData : ScriptableObject
     [Header("Basic Enemy Info")] 
     public string enemyName = "Enemy";
     public string description;
+    
+    [Tooltip("The complete enemy prefab with all required components (Animator, NavMeshAgent, etc.)")]
     public GameObject enemyPrefab;
 
     [Header("Stats")] 

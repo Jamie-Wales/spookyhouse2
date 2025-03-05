@@ -15,6 +15,15 @@ public class WeaponManager : MonoBehaviour
     [Header("Weapon Settings")] public bool createSocketAutomatically = true;
     public Vector3 socketOffset = Vector3.zero;
 
+    [Header("Debug & Testing")] [Tooltip("Current weapon index (0-based)")]
+    public int currentWeaponIndex = 0;
+
+    [Tooltip("Press this key to refresh the current weapon (for testing position/rotation/scale)")]
+    public KeyCode refreshWeaponKey = KeyCode.F;
+
+    [Tooltip("Press this key to cycle to the next weapon")]
+    public KeyCode cycleWeaponKey = KeyCode.G;
+
     private GameObject _currentWeaponInstance;
     private WeaponData _currentWeaponData;
     private AudioSource _weaponAudioSource;
@@ -60,8 +69,7 @@ public class WeaponManager : MonoBehaviour
             {
                 if (weaponSocket)
                 {
-                    // Attach existing socket to right hand
-                    weaponSocket.SetParent(rightHand, false);
+                    weaponSocket.SetParent(rightHand, true);
                     weaponSocket.localPosition = socketOffset;
                     _trailStartPoint = weaponSocket;
                     Debug.Log("Attached weapon socket to right hand");
@@ -71,7 +79,7 @@ public class WeaponManager : MonoBehaviour
                     // Create a new socket
                     GameObject socketObj = new GameObject("WeaponSocket");
                     weaponSocket = socketObj.transform;
-                    weaponSocket.SetParent(rightHand, false);
+                    weaponSocket.SetParent(rightHand, true);
                     weaponSocket.localPosition = socketOffset;
                     weaponSocket.localRotation = Quaternion.identity;
                     _trailStartPoint = weaponSocket;
@@ -96,7 +104,7 @@ public class WeaponManager : MonoBehaviour
 
         if (weapons != null && weapons.Count > 0)
         {
-            EquipWeapon(0);
+            EquipWeapon(currentWeaponIndex);
         }
     }
 
@@ -130,7 +138,7 @@ public class WeaponManager : MonoBehaviour
     private IEnumerator EnableTrailEmissionNextFrame(TrailRenderer trail)
     {
         yield return null;
-        if (trail != null && trail.gameObject.activeInHierarchy)
+        if (trail && trail.gameObject.activeInHierarchy)
         {
             trail.emitting = true;
         }
@@ -156,6 +164,14 @@ public class WeaponManager : MonoBehaviour
 
     private void EquipWeapon(int weaponIndex)
     {
+        if (weaponIndex < 0 || weaponIndex >= weapons.Count)
+        {
+            Debug.LogError($"Invalid weapon index: {weaponIndex}. Must be between 0 and {weapons.Count - 1}");
+            return;
+        }
+
+        currentWeaponIndex = weaponIndex;
+
         if (_currentWeaponInstance)
         {
             Destroy(_currentWeaponInstance);
@@ -164,22 +180,53 @@ public class WeaponManager : MonoBehaviour
         _currentWeaponData = weapons[weaponIndex];
         if (_currentWeaponData.weaponPrefab && weaponSocket)
         {
-            GameObject prefabInstance = Instantiate(_currentWeaponData.weaponPrefab);
-            _currentWeaponInstance = prefabInstance;
-            Vector3 originalLocalPos = prefabInstance.transform.localPosition;
-            Quaternion originalLocalRot = prefabInstance.transform.localRotation;
-            Vector3 originalLocalScale = prefabInstance.transform.localScale;
-            prefabInstance.transform.SetParent(weaponSocket, false);
-            prefabInstance.transform.localPosition = originalLocalPos;
-            prefabInstance.transform.localRotation = originalLocalRot;
-            prefabInstance.transform.localScale = originalLocalScale;
+            // Simply instantiate the weapon prefab directly
+            _currentWeaponInstance = Instantiate(_currentWeaponData.weaponPrefab, weaponSocket, true);
+
+            // Apply position, rotation, and scale directly to the instance
+            _currentWeaponInstance.transform.localPosition = _currentWeaponData.weaponPositionOffset;
+            _currentWeaponInstance.transform.localRotation = Quaternion.Euler(_currentWeaponData.weaponRotationOffset);
+            _currentWeaponInstance.transform.localScale = _currentWeaponData.weaponScale;
+
+            // Get audio source from the weapon
             _weaponAudioSource = _currentWeaponInstance.GetComponentInChildren<AudioSource>();
-            Debug.Log($"Equipped {_currentWeaponData.weaponName} at socket with original transform values");
-            CrosshairController crosshair = FindObjectOfType<CrosshairController>();
-            if (crosshair != null && _currentWeaponData.crosshairSprite != null)
-            {
-                crosshair.SetCrosshairSprite(_currentWeaponData.crosshairSprite);
-            }
+
+            Debug.Log($"Equipped {_currentWeaponData.weaponName} with simple instantiation method");
+        }
+    }
+
+// Helper method to print all child scales recursively (for debugging)
+    private void PrintChildScales(Transform parent, string indent = "")
+    {
+        if (parent == null) return;
+
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            Debug.Log($"{indent}Child '{child.name}' scale: {child.localScale}");
+
+            // Recurse for this child's children, with increased indentation
+            PrintChildScales(child, indent + "  ");
+        }
+    }
+
+    public void RefreshCurrentWeapon()
+    {
+        if (weapons != null && weapons.Count > 0 && currentWeaponIndex >= 0 && currentWeaponIndex < weapons.Count)
+        {
+            Debug.Log($"Refreshing weapon: {weapons[currentWeaponIndex].weaponName}");
+            EquipWeapon(currentWeaponIndex);
+        }
+    }
+
+    // Cycle to the next weapon
+    public void CycleToNextWeapon()
+    {
+        if (weapons != null && weapons.Count > 0)
+        {
+            int nextIndex = (currentWeaponIndex + 1) % weapons.Count;
+            Debug.Log($"Cycling weapon from {currentWeaponIndex} to {nextIndex}");
+            EquipWeapon(nextIndex);
         }
     }
 
@@ -195,8 +242,6 @@ public class WeaponManager : MonoBehaviour
             _currentWeaponInstance.transform.rotation);
 
         vfxInstance.transform.SetParent(_currentWeaponInstance.transform, true);
-        vfxInstance.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
-
         var visualEffect = vfxInstance.GetComponent<VisualEffect>();
         if (visualEffect)
         {
@@ -208,6 +253,18 @@ public class WeaponManager : MonoBehaviour
 
     public void Update()
     {
+        // Handle weapon update key press
+        if (Input.GetKeyDown(refreshWeaponKey))
+        {
+            RefreshCurrentWeapon();
+        }
+
+        // Handle weapon cycle key press
+        if (Input.GetKeyDown(cycleWeaponKey))
+        {
+            CycleToNextWeapon();
+        }
+
         if (_isReloading)
             return;
 
@@ -274,9 +331,17 @@ public class WeaponManager : MonoBehaviour
 
     private void CreateBulletTrail(Vector3 startPosition, Vector3 direction, float distance, float duration)
     {
-        TrailRenderer trail = _trailPool.Get();
-        if (!trail) return;
+        Debug.Log(
+            $"Creating bullet trail from {startPosition}, direction {direction}, distance {distance}, duration {duration}");
 
+        TrailRenderer trail = _trailPool.Get();
+        if (!trail)
+        {
+            Debug.LogWarning("Failed to get trail from pool");
+            return;
+        }
+
+        Debug.Log("Got trail from pool successfully");
         trail.transform.position = startPosition;
         trail.transform.rotation = Quaternion.LookRotation(direction);
         StartCoroutine(MoveTrail(trail, startPosition, direction, distance, duration));
@@ -325,27 +390,71 @@ public class WeaponManager : MonoBehaviour
     // ReSharper disable Unity.PerformanceAnalysis
     private void Shoot()
     {
-        if (!_currentWeaponData || !_currentWeaponInstance) return;
+        Debug.Log("Shoot method called");
+
+        if (!_currentWeaponData)
+        {
+            Debug.LogWarning("No weapon data available");
+            return;
+        }
+
+        if (!_currentWeaponInstance)
+        {
+            Debug.LogWarning("No weapon instance available");
+            return;
+        }
+
+        Debug.Log(
+            $"Weapon: {_currentWeaponData.weaponName}, Ammo: {_currentWeaponData.currentAmmo}/{_currentWeaponData.maxAmmo}");
 
         if (animator != null)
         {
             animator.SetTrigger("Shoot");
+            Debug.Log("Shoot animation triggered");
+        }
+
+        // Check each condition separately
+        if (_currentWeaponData.shootSound == null)
+        {
+            Debug.LogWarning("Weapon has no shoot sound assigned");
+        }
+
+        if (_weaponAudioSource == null)
+        {
+            Debug.LogWarning("Weapon has no audio source");
+        }
+
+        if (_currentWeaponData.currentAmmo <= 0)
+        {
+            Debug.LogWarning("Weapon is out of ammo");
         }
 
         if (_currentWeaponData.shootSound && _weaponAudioSource && _currentWeaponData.currentAmmo > 0)
         {
+            Debug.Log("All shooting conditions met, proceeding with effects");
             _currentWeaponData.currentAmmo--;
             _weaponAudioSource.PlayOneShot(_currentWeaponData.shootSound);
 
             var mainCamera = Camera.main;
-            if (!mainCamera) return;
-            var muzzlePosition = _currentWeaponInstance.transform.position +
-                                 _currentWeaponInstance.transform.TransformDirection(
-                                     _currentWeaponData.muzzlePosition);
+            if (!mainCamera)
+            {
+                Debug.LogWarning("No main camera found");
+                return;
+            }
+
+            var muzzlePosition = _currentWeaponInstance.transform.TransformPoint(_currentWeaponData.muzzlePosition);
+            Debug.Log($"Muzzle position: {muzzlePosition}, Muzzle offset: {_currentWeaponData.muzzlePosition}");
+
             var shootDirection = mainCamera.transform.forward;
+
             if (_currentWeaponData.muzzleFlash)
             {
+                Debug.Log("Playing muzzle flash");
                 _PlayMuzzleFlash();
+            }
+            else
+            {
+                Debug.LogWarning("No muzzle flash prefab assigned");
             }
 
             CrosshairController crosshair = FindObjectOfType<CrosshairController>();
@@ -354,12 +463,15 @@ public class WeaponManager : MonoBehaviour
                 crosshair.ExpandCrosshairOnFire();
             }
 
+            Debug.Log(
+                $"Creating bullet trail with range: {_currentWeaponData.range}, duration: {_currentWeaponData.trailDuration}");
             CreateBulletTrail(
                 muzzlePosition,
                 shootDirection,
                 _currentWeaponData.range,
                 _currentWeaponData.trailDuration
             );
+
             WeaponHitDetection hitDetection = GetComponent<WeaponHitDetection>();
             if (hitDetection)
             {
@@ -368,7 +480,12 @@ public class WeaponManager : MonoBehaviour
         }
         else if (_currentWeaponData.currentAmmo <= 0 && _currentWeaponData.reloadSound && _weaponAudioSource)
         {
+            Debug.Log("Out of ammo, reloading");
             StartCoroutine(Reload());
+        }
+        else
+        {
+            Debug.LogWarning("Shooting conditions not met");
         }
     }
 

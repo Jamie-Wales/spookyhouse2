@@ -4,10 +4,12 @@ using UnityEngine.UI;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [Header("Health Settings")] public float maxHealth = 100f;
+    [Header("Health Settings")] 
+    public float maxHealth = 100f;
     public float currentHealth;
 
-    [Header("UI Elements")] public Image healthBar;
+    [Header("UI Elements")] 
+    public Slider healthSlider; // Slider with range 0-100
     public Image damageOverlay;
 
     private bool _isDead = false;
@@ -15,6 +17,12 @@ public class PlayerHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
+        if (healthSlider)
+        {
+            // No need to set maxValue if it's already configured in the Inspector
+            healthSlider.value = currentHealth; // This assumes maxHealth is also 100
+        }
+        
         if (damageOverlay)
         {
             Color overlayColor = damageOverlay.color;
@@ -54,9 +62,13 @@ public class PlayerHealth : MonoBehaviour
 
     private void UpdateHealthUI()
     {
-        if (healthBar)
+        if (healthSlider)
         {
-            healthBar.fillAmount = currentHealth / maxHealth;
+            healthSlider.value = (currentHealth / maxHealth) * 100f;
+        }
+        else
+        {
+           Debug.Log("Cannot find health UI"); 
         }
     }
 

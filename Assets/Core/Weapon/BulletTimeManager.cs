@@ -1,22 +1,23 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI; // Add this for UI elements
 
 public class BulletTimeManager : MonoBehaviour
 {
     public static BulletTimeManager Instance { get; private set; }
 
-[Header("Audio Settings")]
+    [Header("Audio Settings")]
     [Range(0.1f, 1f)] public float otherSoundVolume = 0.5f; 
     [Range(0.1f, 1f)] public float otherSoundPitch = 0.5f;  
     
-    private float _defaultPitch = 1f;
-    private Dictionary<AudioSource, float> _originalVolumes = new Dictionary<AudioSource, float>();
-    private Dictionary<AudioSource, float> _originalPitches = new Dictionary<AudioSource, float>();
     [Header("Bullet Time Settings")]
     [Range(0.05f, 1f)] public float bulletTimeScale = 0.3f;
     public float maxBulletTimeEnergy = 100f;
     public float energyRechargeRate = 20f;
     public KeyCode bulletTimeKey = KeyCode.Mouse3;
+
+    [Header("UI Elements")]
+    public Slider bulletTimeSlider; // Add this reference
 
     [Header("Audio")]
     public AudioClip bulletTimeSound;
@@ -29,9 +30,12 @@ public class BulletTimeManager : MonoBehaviour
     private bool _isInBulletTime;
     private AudioSource _audioSource;
     private float _defaultFixedDeltaTime;
+    private float _defaultPitch = 1f;
     private float _lastPlaybackTime; // Store audio position
     private GameObject _screenTintObj;
     private SpriteRenderer _screenTintRenderer;
+    private Dictionary<AudioSource, float> _originalVolumes = new Dictionary<AudioSource, float>();
+    private Dictionary<AudioSource, float> _originalPitches = new Dictionary<AudioSource, float>();
 
     private void Awake()
     {
@@ -42,10 +46,20 @@ public class BulletTimeManager : MonoBehaviour
             _defaultFixedDeltaTime = Time.fixedDeltaTime;
             SetupAudio();
             SetupScreenTint();
+            SetupSlider();
         }
         else
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void SetupSlider()
+    {
+        if (bulletTimeSlider)
+        {
+            bulletTimeSlider.maxValue = maxBulletTimeEnergy;
+            bulletTimeSlider.value = _currentEnergy;
         }
     }
 
@@ -106,9 +120,15 @@ public class BulletTimeManager : MonoBehaviour
         {
             _currentEnergy = Mathf.Min(_currentEnergy + (energyRechargeRate * Time.deltaTime), maxBulletTimeEnergy);
         }
+        
+        // Update the slider value
+        if (bulletTimeSlider)
+        {
+            bulletTimeSlider.value = _currentEnergy;
+        }
     }
 
- public void ToggleBulletTime(bool activate)
+    public void ToggleBulletTime(bool activate)
     {
         if (activate && _currentEnergy > 0)
         {
@@ -155,9 +175,8 @@ public class BulletTimeManager : MonoBehaviour
         Time.fixedDeltaTime = _defaultFixedDeltaTime;
     }
 
-  private void AdjustAllSounds(float volume, float pitch)
+    private void AdjustAllSounds(float volume, float pitch)
     {
-    
         AudioSource[] allSources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
         foreach (AudioSource source in allSources)
         {
